@@ -97,7 +97,7 @@ router.get("/single/:blogTitleToGet", function (req, res, next) {
 router.delete("/single/:blogTitleToDelete", (req, res) => {
   console.log("DELETE to /delete-movie");
 
-  // find the index of the movie in the movie list
+  // find the index of the blog in the blog list
   const indexOfBlog = sampleBlogs.findIndex((blog) => {
     if (blog.title === req.params.blogTitleToDelete) {
       console.log("Blog titles match!");
@@ -118,7 +118,7 @@ router.delete("/single/:blogTitleToDelete", (req, res) => {
   }
 
   console.log("Before Delete", sampleBlogs);
-  // remove the movie title from the array of the index
+  // remove the blog title from the array of the index
   sampleBlogs.splice(indexOfBlog, 1);
   console.log("After delete", indexOfBlog);
 
