@@ -1,7 +1,9 @@
 var express = require("express");
 var router = express.Router();
 
-const sampleBlogs = [
+var { validateBlogData } = require("../validation/blogs");
+
+const blogData = [
   {
     title: "dicta",
     text: "Iusto et in et. Nulla accusantium fugit. Et qui dolorem inventore soluta et veritatis. Aut ut aut non laudantium eveniet suscipit odit. Sapiente sint nihil nihil sit et molestias. In nisi omnis quas et sed aut minus aperiam ea.\n \rLaudantium quo quisquam quae. Et et quas officia perspiciatis iusto sunt sunt eaque. Quidem sit voluptas deserunt sequi magni.\n \rEst est facere cumque ipsam omnis animi. Voluptatem magnam officiis architecto possimus. Quia similique aut eos qui. Quasi quae sed aliquam.",
@@ -59,7 +61,7 @@ router.get("/all", function (req, res, next) {
   res.json({
     success: true,
     route: "blogs",
-    blogs: sampleBlogs,
+    blogs: blogData,
     message: "HEY! This is the /blogs/all route!",
   });
 });
@@ -71,8 +73,9 @@ router.get("/all", function (req, res, next) {
 router.get("/single/:blogTitleToGet", function (req, res, next) {
   const blogTitleToGet = req.params.blogTitleToGet;
 
-  const foundBlogIndex = sampleBlogs.findIndex((blog) => {
-    if (blog.title === req.params.blogTitleToGet) {
+  // using the .find() method instead of .findIndex(). It is a little bit less code.
+  const foundBlog = blogData.find((blog) => {
+    if (blog.title === blogTitleToGet) {
       console.log("Blog titles match!");
       return true;
     } else {
@@ -80,8 +83,6 @@ router.get("/single/:blogTitleToGet", function (req, res, next) {
       return false;
     }
   });
-
-  const foundBlog = sampleBlogs[foundBlogIndex];
 
   res.json({
     success: true,
@@ -91,14 +92,14 @@ router.get("/single/:blogTitleToGet", function (req, res, next) {
 });
 
 //////////////////////////////////
-// delete route
+// DELETE route
 ////////////////////////////////////
 
 router.delete("/single/:blogTitleToDelete", (req, res) => {
   console.log("DELETE to /delete-movie");
 
   // find the index of the blog in the blog list
-  const indexOfBlog = sampleBlogs.findIndex((blog) => {
+  const indexOfBlog = blogData.findIndex((blog) => {
     if (blog.title === req.params.blogTitleToDelete) {
       console.log("Blog titles match!");
       return true;
@@ -112,23 +113,102 @@ router.delete("/single/:blogTitleToDelete", (req, res) => {
 
   if (indexOfBlog < 0) {
     res.json({
-      hasBeenDeleted: false,
+      deleted: false,
     });
     return;
   }
 
-  console.log("Before Delete", sampleBlogs);
+  console.log("Before Delete", blogData);
   // remove the blog title from the array of the index
-  sampleBlogs.splice(indexOfBlog, 1);
+  blogData.splice(indexOfBlog, 1);
   console.log("After delete", indexOfBlog);
+
+  res.json({
+    deleted: true,
+  });
+});
+
+////////////////////////////////
+// POST routes
+////////////////////////////////
+
+router.post("/create-one", (req, res) => {
+  const title = req.body.title;
+  const text = req.body.text;
+  const author = req.body.author;
+  const category = req.body.category;
+
+  const newBlog = {
+    title,
+    text,
+    author,
+    category,
+    createdAt: new Date(),
+    lastModified: new Date(),
+  };
+
+  const blogDataCheck = validateBlogData(newBlog);
+
+  if (blogDataCheck.isValid === false) {
+    res.json({
+      success: false,
+      message: blogDataCheck.message,
+    });
+    return;
+  }
+
+  console.log("before push", blogData);
+  blogData.push(newBlog);
+  console.log("after push", blogData);
 
   res.json({
     success: true,
   });
 });
 
-////////////////////////////////////////////
+/////////////////////////////
+// PUT routes
+////////////////////////////
 
-// postman requests completed for all new routes 
+router.put("/update-one/:blogTitle", (req, res) => {
+  const title = req.params.blogTitle;
+  const text = req.body.text;
+  const author = req.body.author;
+  const category = req.body.category;
+
+  const originalBlogIndex = blogData.findIndex((blog) => {
+    return (blog.title = title);
+  });
+
+  const originalBlog = blogData[originalBlogIndex];
+
+  const newBlog = {
+    title: originalBlog.title,
+    text,
+    author,
+    category,
+    createdAt: originalBlog.createdAt,
+    lastModified: new Date(),
+  };
+
+  const blogDataCheck = validateBlogData(newBlog);
+
+  if (blogDataCheck.isValid === false) {
+    res.json({
+      success: false,
+      message: blogDataCheck.message,
+    });
+    return;
+  }
+
+//ToDO: new to update blog in blogData
+blogData[originalBlogIndex] = newBlog
+
+  res.json({
+    success: true,
+  });
+});
+
+// postman requests completed for all new routes
 
 module.exports = router;
